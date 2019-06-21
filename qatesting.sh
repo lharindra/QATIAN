@@ -50,7 +50,88 @@ echo -e ${Code}
 echo -e "-------------------------------------------"
 echo -e "To check the taddm files configured on the host"
 ls -l /etc/sudoers.d/217_TADDMDISC_NA
+if [[$? -ne 0 ]]
+then
+ echo -e "ERROR:- 217_TADDMDISC_NA is not configured on the host"
+fi
 ID=$( id taddmlux)
+if [[$? -ne 0 ]]
+then
+ echo -e "ERROR:- No taddmlux user on the host"
+fi
 echo -e "The ID of the taddmlux is:- ${ID}"
 ls -l ~taddmlux/.ssh/
+if [[$? -ne 0 ]]
+then
+ echo -e "ERROR:- No taddmlux .ssh file  on the host"
+fi
 echo -e "-------------------------------------------"
+echo -e "Check whether RSA is intalled on the host"
+locate acestatus 2> /dev/null
+if [[ $? -eq 0 ]]
+then 
+ echo -e "RSA is installed on the host"
+else
+echo -e "ERROR:- RSA is not installed on the host"
+echo -e "-------------------------------------------"
+echo -e "Display all the users configured on the host"
+more /etc/passwd
+echo -e "-------------------------------------------"
+echo -e "Verify no User except root with UID 0"
+more /etc/passwd | grep "x:0"
+echo -e "-------------------------------------------"
+echo -e "Verify no Group except root with GID 0"
+more /etc/group | grep "x:0"
+echo -e "-------------------------------------------"
+echo -e "Verify whether FTP/Telnet are disabled"
+ftp=$( ps -C ftp >/dev/null && echo "Running" || echo "Not running")
+if [[ ${ftp} -eq "Running"]]
+then
+ echo -e "ERROR:- FTP on this host is enabled"
+else
+ echo -e "FTP is Disabled on the host"
+fi
+telnet=$( ps -C telnet >/dev/null && echo "Running" || echo "Not running")
+if [[ ${telnet} -eq "Running"]]
+then 
+ echo -e "ERROR:- Telnet on this host is enabled"
+else
+ echo -e "Telnet is Disabled on the host"
+fi
+echo -e "-------------------------------------------"
+echo -e "Verify SUDO users configured as necessary per External customer specific servers"
+cat /etc/sudoers | grep -v '#'
+echo -e "-------------------------------------------"
+echo -e "Verify Linux firewall is "off" and in "accept" mod"
+iptables -nL
+echo -e "-------------------------------------------"
+check=$( find /usr/bin/su /usr/bin/crontab -user root -perm -4000 -exec ls -ldb {} \;)
+if [[ $? -eq 0 ]]
+then
+ echo -e "Both Crontab and SU files had SETUID enabled"
+else
+ echo -e "ERROR:- Both Crontab and SU files had SETUID is not enabled"
+fi
+echo -e "-------------------------------------------"
+cp /etc/syslog.conf /etc/syslog.conf_"$(date +'%Y%m%d')"
+if [[ $? -eq 0 ]]
+then
+ echo -e "Copied the syslog.conf file with latest date under /etc/"
+else
+ echo -e "ERROR:- Unable to copy the syslog.conf file(May be file does not exists)"
+fi
+echo -e "-------------------------------------------"
+lookup=$( nslookup ibm.com)
+if [[ $? -eq 0 ]]
+then
+ echo -e "Nslookup is working good!!! able to reach IBM.com" 
+else
+ echo -e "ERROR:- Unable to nslookup IBM.COM!!)"
+fi
+
+
+
+
+
+
+echo -e "
