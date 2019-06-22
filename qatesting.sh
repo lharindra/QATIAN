@@ -1,7 +1,8 @@
 #!/bin/bash
-echo -e "" 
+echo -e "+++++++++++++++++++++++++++++++++++++++"
+echo -e "X QAT TESTING GOING TO BE STARTED !!! X"
+echo -e "+++++++++++++++++++++++++++++++++++++++"
 echo -e ""
-
 echo -e "To verify the hostname and the OS version"
 echo -e "-----------------------------------------"
 hostname=$( hostname)
@@ -9,10 +10,10 @@ echo -e "Hostname:- ${hostname}"
 Name=$( cat /etc/os-release | sed -n '1p'|cut -d"=" -f2)
 Version_id=$( cat /etc/os-release | sed -n '2p'|cut -d"=" -f2)
 echo -e "the OS installed on The host is ${Name} with the version of ${Version_id}"
+sleep 3
 echo -e "-------------------------------------------"
 Mem=$( free -tm| awk '{print  $1, $2}'| sed -n '2,4p' | tr "\n" " ")
 echo -e "Available memory on the host is(MB's):- ${Mem}"
-echo -e ""
 echo -e "-------------------------------------------"
 cpu=$( cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)
 core=$( cat /proc/cpuinfo | grep "cpu cores" | uniq |awk '{print $4}')
@@ -28,6 +29,7 @@ echo -e "the volumns which are configured on The host"
 vgs
 echo -e "the logical storage configured on The host"
 lvs
+sleep 3
 echo -e "-------------------------------------------"
 if rpm -q BESAgent.x86_64
 then
@@ -36,11 +38,15 @@ then
 else
  echo -e "ERROR:- BigFix is not installed on the host"
 fi
-state=$( ps -C besclient >/dev/null && echo "Running" || echo "Not running")
+state=$( ps -C BESClient >/dev/null && echo "Running" || echo "Not running")
 echo -e "the besclient process on The host is:- ${state}"
-Code=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2')
-echo -e "RelaySevers ip's and c_code configured on the host"
-echo -e ${Code}
+C_code=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 4p | awk '{print $3}')
+echo -e "The value of the C_code is:- ${C_code}"
+Relasyser1=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 10p | awk '{print $3}')
+echo -e "The value of the RelayServer1 is:- ${Relasyser1}"
+Relasyser2=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 13p | awk '{print $3}')
+echo -e "The value of the RelayServer2 is:- ${Relasyser2}"
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "To check the taddm files configured on the host"
 ls -l /etc/sudoers.d/217_TADDMDISC_NA 2> /dev/null
@@ -59,6 +65,7 @@ if [[ $? -ne 0 ]]
 then
  echo -e "ERROR:- No taddmlux .ssh file  on the host"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Check whether RSA is intalled on the host"
 locate acestatus 2> /dev/null
@@ -68,11 +75,20 @@ then
 else
  echo -e "ERROR:- RSA is not installed on the host"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Display all the users configured on the host"
-more /etc/passwd
+cat /etc/passwd
 echo -e "-------------------------------------------"
-more /etc/passwd | grep "x:0" > /tmp/User_${hostname}
+echo -e "Network configurations"
+ipv4=$( hostname -I | awk '{print $1}')
+echo -e "The IPv4 address configured on the host is:- ${ipv4}"
+echo -e "Verify the ipv6 on the host"
+echo -e "the default gateway configured on the host"
+netstat -rn
+sleep 3
+echo -e "-------------------------------------------"
+cat /etc/passwd | grep "x:0" > /tmp/User_${hostname}
 if [[ $(wc -l < /tmp/User_${hostname}) -ge 2 ]]
 then
  echo -e "ERROR:- Some users have same permissions as root. Please find them below"
@@ -81,8 +97,9 @@ else
  echo -e "No User except root with UID 0"
  rm -rf /tmp/User_${hostname}
 fi
+sleep 3
 echo -e "-------------------------------------------"
-more /etc/group | grep "x:0" > /tmp/Group_${hostname}
+cat /etc/group | grep "x:0" > /tmp/Group_${hostname}
 if [[ $(wc -l < /tmp/Group_${hostname}) -ge 2 ]]
 then
  echo -e "ERROR:- Some users have same permissions as root. Please find them below"
@@ -91,6 +108,7 @@ else
  echo -e "No User except root with UID 0"
  rm -rf /tmp/Group_${hostname}
 fi
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Verify whether FTP/Telnet are disabled"
 ps -C ftp > /dev/null 
@@ -107,13 +125,22 @@ then
 else
  echo -e "Telnet is Disabled on the host"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Verify SUDO users configured as necessary per External customer specific servers"
 cat /etc/sudoers | grep -v "#" | sed  '/^#/ d' | sed '/^Defaults/ d'|sed '/^$/d' > /tmp/Sudo_${hostname}
 cat /tmp/Sudo_${hostname}
 echo -e "-------------------------------------------"
 echo -e "Verify Linux firewall is "off" and in "accept" mod"
-iptables -nL 
+iptables -nL > tables 2> /dev/null
+status=$( cat tables | awk '{print $5}' | sed '/^$/d' | uniq -d)
+if [[ $(wc -l < tables) -eq 8 && $status -eq "destination" ]]
+then
+ echo "No extra Firewall rules are configured(It had default configuration)"
+else
+ echo -e "ERROR:- Some extra firewall rules are configured on the host(please have a look)"
+fi
+sleep 3
 echo -e "-------------------------------------------"
 find /usr/bin/su /usr/bin/crontab -user root -perm -4000 -exec ls -ldb {} \; > /dev/null
 if [[ $? -eq 0 ]]
@@ -122,6 +149,7 @@ then
 else
  echo -e "ERROR:- Both Crontab and SU files had SETUID is not enabled"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 cp /etc/syslog.conf /etc/syslog.conf_"$(date +'%Y%m%d')" 2> /dev/null
 if [[  $? -eq 0  ]]
@@ -130,6 +158,7 @@ then
 else
  echo -e "ERROR:- Unable to copy the syslog.conf file(May be file does not exists)"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 nslookup www.google.com > /dev/null
 if [[  $? -eq 0 ]]
@@ -138,6 +167,18 @@ then
 else
  echo -e "ERROR:- Unable to nslookup GOOGLE.COM!!)"
 fi
+sleep 3
+echo -e "-------------------------------------------"
+echo -e "Verify whether ncpa is running"
+state=$( ps -C ncpa_passive >/dev/null && echo "Running" || echo "Not running")
+if [[ $? -eq 0 ]]
+ echo -e "Nagios is ${status} on the host"
+else
+ echo -e "ERROR:- Nagios is ${status} on the host"
+fi
+parent=$( /usr/local/ncpa/etc/ncpa.cfg | grep -i parent | grep -v "#")
+echo -e "The URL congifured for is(/usr/local/ncpa/etc/ncpa.cfg) :- ${parent}"
+sleep 3
 echo -e "-------------------------------------------"
 sadmin status > /dev/null 2> /dev/null
 if [[ $? -eq 0 ]]
@@ -163,8 +204,10 @@ then
 else
  echo -e "As the OS version on the host is ${OS_ver}. HIP's configuration is not required as per the QAT Requirements. For more details check with McAfee team(If required)"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 yum check-update > /tmp/Yum_${hostname}
+sleep 3
 if [[ $? -eq 100 ]]
 then
  echo -e "System has Security system patches. Please go ahead and patch them(if required)"
@@ -182,18 +225,73 @@ then
 else
  echo -e "Error:- Something is bad with yum please check manually"
 fi
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Assure that Anti-virus is setup correctly and functioning"
-rpm -q MFEcma
-rpm -qa McAfeeVSEForLinux
-/opt/NAI/LinuxShield/bin/nails --version
-/opt/NAI/LinuxShield/bin/nails on-access --status
-ps -ef | grep -i isec
+state=$( ps -C isectpd >/dev/null && echo "Running" || echo "Not running")
+if [[ $? -eq 0 ]]
+ echo -e "Anti-virus is ${status} on the host"
+else
+ echo -e "ERROR:- Anti-virus is ${status} on the host"
+fi
 /opt/isec/ens/threatprevention/bin/isecav --version
+sleep 3
 echo -e "-------------------------------------------"
 echo -e "Healthchecks"
-
-
+echo -e "EP_CHECK testing -----------------------------------"
+check_EP=$( ls -lt /var/tmp/IBM_SAC/EP_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
+if [[ $? -ne 0 ]]
+then
+ echo -e "ERROR:- /var/tmp/IBM_SAC/EP_CHECK/ :- This folder is not configired "
+elif [[ -z $check_EP ]]
+then
+ echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/EP_CHECK/"
+else
+ Validate_EP=$( find /var/tmp/IBM_SAC/EP_CHECK/${check_EP} -mtime +30 -exec echo "still valid" \;)
+ if [[ -z $Validate_EP ]]
+ then
+  echo -e "ERROR:- The pass file had expired!! it's been more than 30 days since the last modification(Please re-run the health checks)"
+ else
+  echo -e "EP_CHECK healthcheck is Successfull"
+ fi
+fi
+sleep 3
+echo -e "SCHECK testing -----------------------------------"
+check_SC=$( ls -lt /var/tmp/IBM_SAC/EP_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
+if [[ $? -ne 0 ]]
+then
+ echo -e "ERROR:- /var/tmp/IBM_SAC/EP_CHECK/ :- This folder is not configired "
+elif [[ -z $check_SC ]]
+then
+ echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/EP_CHECK/"
+else
+ Validate_SC=$( find /var/tmp/IBM_SAC/EP_CHECK/${check_SC} -mtime +30 -exec echo "still valid" \;)
+ if [[ -z $Validate_SC ]]
+ then
+  echo -e "ERROR:- The pass file had expired!! it's been more than 30 days since the last modification(Please re-run the health checks)"
+ else
+  echo -e "EP_CHECK healthcheck is Successfull"
+ fi
+fi
+sleep 3
+echo -e "SSH_CHECK testing -----------------------------------"
+check_SS=$( ls -lt /var/tmp/IBM_SAC/EP_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
+if [[ $? -ne 0 ]]
+then
+ echo -e "ERROR:- /var/tmp/IBM_SAC/EP_CHECK/ :- This folder is not configired "
+elif [[ -z $check_SS ]]
+then
+ echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/EP_CHECK/"
+else
+ Validate_SS=$( find /var/tmp/IBM_SAC/EP_CHECK/${check_SS} -mtime +30 -exec echo "still valid" \;)
+ if [[ -z $Validate_SS ]]
+ then
+  echo -e "ERROR:- The pass file had expired!! it's been more than 30 days since the last modification(Please re-run the health checks)"
+ else
+  echo -e "EP_CHECK healthcheck is Successfull"
+ fi
+fi
+sleep 3
 echo -e "-------------------------------------------"
 ballon=$( lsmod | grep balloon) 2> /dev/null
 if [[ $? -eq 0 ]]
@@ -211,12 +309,4 @@ then
 else
  echo -e "Netbackup software is not installed"
 fi
-
-
-echo -e "-------------------------------------------"
-
-
-
-
-
-echo -e ""
+echo -e "----------------------The End---------------------"
