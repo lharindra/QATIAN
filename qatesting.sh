@@ -41,6 +41,7 @@ else
 fi
 state=$( ps -C BESClient >/dev/null && echo "Running" || echo "Not running")
 if [[ $? -eq 0 ]]
+then
  echo -e "BigFix is ${state} on the host"
 else
  echo -e "ERROR:- BigFix is ${state} on the host"
