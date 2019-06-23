@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir -p /tmp/QAT
 echo -e "+++++++++++++++++++++++++++++++++++++++"
 echo -e "X QAT TESTING GOING TO BE STARTED !!! X"
 echo -e "+++++++++++++++++++++++++++++++++++++++"
@@ -211,15 +212,18 @@ fi
 sleep 3
 echo -e "-------------------------------------------"
 yum check-update > /tmp/QAT/Yum_${hostname}
-sleep 3
 if [[ $? -eq 100 ]]
 then
  echo -e "System has Security system patches. Please go ahead and patch them(if required)"
  while true; do
     read -p "Do you wish to install all the available patches? Please give the input(y/n):-" yn
+    if [[ "$yn" == "y" || "$yn" == "Y" ]]
+    then
+     read -p "Re-Confirm please type(y/n):-" yn
+    fi
     case $yn in
-        [Yy]* ) yum update -y; break;;
-        [Nn]* ) break;;
+        [Yy]* ) yum update -y 2> /dev/null ; if [[ $? -eq 0 ]]; then echo -e "Patching is completed successfully"; else echo -e "ERROR:- YUM has some issues while patching"; fi; break;;
+        [Nn]* ) echo -e "As you had selected (No) it's quiting!!!";break;;
         * ) echo "Please answer yes or no.";;
     esac
  done
