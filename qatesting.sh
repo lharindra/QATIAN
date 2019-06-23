@@ -111,7 +111,7 @@ then
  echo -e "ERROR:- Some users have same permissions as root. Please find them below"
  cat /tmp/QAT/Group_${hostname}
 else
- echo -e "No User except root with UID 0"
+ echo -e "No User except root with GID 0"
  rm -rf /tmp/QAT/Group_${hostname}
 fi
 sleep 3
@@ -157,12 +157,12 @@ else
 fi
 sleep 3
 echo -e "-------------------------------------------"
-cp /etc/syslog.conf /etc/syslog.conf_"$(date +'%Y%m%d')" 2> /dev/null
+cp /etc/rsyslog.conf /etc/rsyslog.conf_"$(date +'%Y%m%d')" 2> /dev/null
 if [[  $? -eq 0  ]]
 then
- echo -e "Copied the syslog.conf file with latest date under /etc/"
+ echo -e "Copied the rsyslog.conf file with latest date under /etc/"
 else
- echo -e "ERROR:- Unable to copy the syslog.conf file(May be file does not exists)"
+ echo -e "ERROR:- Unable to copy the rsyslog.conf file(May be file does not exists)"
 fi
 sleep 3
 echo -e "-------------------------------------------"
@@ -178,6 +178,7 @@ echo -e "-------------------------------------------"
 echo -e "Verify whether ncpa is running"
 state=$( ps -C ncpa_passive >/dev/null && echo "Running" || echo "Not running")
 if [[ $? -eq 0 ]]
+then
  echo -e "Nagios is ${status} on the host"
 else
  echo -e "ERROR:- Nagios is ${status} on the host"
@@ -239,6 +240,7 @@ echo -e "-------------------------------------------"
 echo -e "Assure that Anti-virus is setup correctly and functioning"
 state=$( ps -C isectpd >/dev/null && echo "Running" || echo "Not running")
 if [[ $? -eq 0 ]]
+then
  echo -e "Anti-virus is ${status} on the host"
 else
  echo -e "ERROR:- Anti-virus is ${status} on the host"
@@ -266,15 +268,15 @@ else
 fi
 sleep 3
 echo -e "SCHECK testing -----------------------------------"
-check_SC=$( ls -lt /var/tmp/IBM_SAC/EP_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
+check_SC=$( ls -lt /var/tmp/IBM_SAC/SCHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
 if [[ $? -ne 0 ]]
 then
- echo -e "ERROR:- /var/tmp/IBM_SAC/EP_CHECK/ :- This folder is not configired "
+ echo -e "ERROR:- /var/tmp/IBM_SAC/SCHECK/ :- This folder is not configired "
 elif [[ -z $check_SC ]]
 then
- echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/EP_CHECK/"
+ echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/SCHECK/"
 else
- Validate_SC=$( find /var/tmp/IBM_SAC/EP_CHECK/${check_SC} -mtime +30 -exec echo "still valid" \;)
+ Validate_SC=$( find /var/tmp/IBM_SAC/SCHECK/${check_SC} -mtime +30 -exec echo "still valid" \;)
  if [[ -z $Validate_SC ]]
  then
   echo -e "ERROR:- The pass file had expired!! it's been more than 30 days since the last modification(Please re-run the health checks)"
@@ -284,15 +286,15 @@ else
 fi
 sleep 3
 echo -e "SSH_CHECK testing -----------------------------------"
-check_SS=$( ls -lt /var/tmp/IBM_SAC/EP_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
+check_SS=$( ls -lt /var/tmp/IBM_SAC/SSH_CHECK/ | grep -i pass | sed -n 1p | awk '{print $9}') 2> /dev/null
 if [[ $? -ne 0 ]]
 then
- echo -e "ERROR:- /var/tmp/IBM_SAC/EP_CHECK/ :- This folder is not configired "
+ echo -e "ERROR:- /var/tmp/IBM_SAC/SSH_CHECK/ :- This folder is not configired "
 elif [[ -z $check_SS ]]
 then
- echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/EP_CHECK/"
+ echo -e "ERROR:- There is no pass file under /var/tmp/IBM_SAC/SSH_CHECK/"
 else
- Validate_SS=$( find /var/tmp/IBM_SAC/EP_CHECK/${check_SS} -mtime +30 -exec echo "still valid" \;)
+ Validate_SS=$( find /var/tmp/IBM_SAC/SSH_CHECK/${check_SS} -mtime +30 -exec echo "still valid" \;)
  if [[ -z $Validate_SS ]]
  then
   echo -e "ERROR:- The pass file had expired!! it's been more than 30 days since the last modification(Please re-run the health checks)"
