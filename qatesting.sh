@@ -7,16 +7,16 @@ echo -e "To verify the hostname and the OS version"
 echo -e "-----------------------------------------"
 hostname=$( hostname)
 echo -e "Hostname:- ${hostname}"
-Name=$( cat /etc/os-release | sed -n '1p'|cut -d"=" -f2)
-Version_id=$( cat /etc/os-release | sed -n '2p'|cut -d"=" -f2)
+Name=$( cat /etc/os-release | sed -n '1p'|cut -d"=" -f2) 2> /dev/null
+Version_id=$( cat /etc/os-release | sed -n '2p'|cut -d"=" -f2) 2> /dev/null
 echo -e "the OS installed on The host is ${Name} with the version of ${Version_id}"
 sleep 3
 echo -e "-------------------------------------------"
-Mem=$( free -tm| awk '{print  $1, $2}'| sed -n '2,4p' | tr "\n" " ")
+Mem=$( free -tm| awk '{print  $1, $2}'| sed -n '2,4p' | tr "\n" " ") 2> /dev/null
 echo -e "Available memory on the host is(MB's):- ${Mem}"
 echo -e "-------------------------------------------"
-cpu=$( cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)
-core=$( cat /proc/cpuinfo | grep "cpu cores" | uniq |awk '{print $4}')
+cpu=$( cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l) 2> /dev/null
+core=$( cat /proc/cpuinfo | grep "cpu cores" | uniq |awk '{print $4}') 2> /dev/null
 echo -e "No of CORE ${core} per No Of CPU ${cpu} on the Host -- In numerical format(core*cpu):- ${core}*${cpu}"
 lscpu | sed -n '1,2p'
 echo -e "-------------------------------------------"
@@ -39,7 +39,11 @@ else
  echo -e "ERROR:- BigFix is not installed on the host"
 fi
 state=$( ps -C BESClient >/dev/null && echo "Running" || echo "Not running")
-echo -e "the besclient process on The host is:- ${state}"
+if [[ $? -eq 0 ]]
+ echo -e "BigFix is ${state} on the host"
+else
+ echo -e "ERROR:- BigFix is ${state} on the host"
+fi
 C_code=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 4p | awk '{print $3}')
 echo -e "The value of the C_code is:- ${C_code}"
 Relasyser1=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 10p | awk '{print $3}')
@@ -88,25 +92,25 @@ echo -e "the default gateway configured on the host"
 netstat -rn
 sleep 3
 echo -e "-------------------------------------------"
-cat /etc/passwd | grep "x:0" > /tmp/User_${hostname}
-if [[ $(wc -l < /tmp/User_${hostname}) -ge 2 ]]
+cat /etc/passwd | grep "x:0" > /tmp/QAT/User_${hostname}
+if [[ $(wc -l < /tmp/QAT/User_${hostname}) -ge 2 ]]
 then
  echo -e "ERROR:- Some users have same permissions as root. Please find them below"
- cat /tmp/User_${hostname}
+ cat /tmp/QAT/User_${hostname}
 else
  echo -e "No User except root with UID 0"
- rm -rf /tmp/User_${hostname}
+ rm -rf /tmp/QAT/User_${hostname}
 fi
 sleep 3
 echo -e "-------------------------------------------"
-cat /etc/group | grep "x:0" > /tmp/Group_${hostname}
-if [[ $(wc -l < /tmp/Group_${hostname}) -ge 2 ]]
+cat /etc/group | grep "x:0" > /tmp/QAT/Group_${hostname}
+if [[ $(wc -l < /tmp/QAT/Group_${hostname}) -ge 2 ]]
 then
  echo -e "ERROR:- Some users have same permissions as root. Please find them below"
- cat /tmp/Group_${hostname}
+ cat /tmp/QAT/Group_${hostname}
 else
  echo -e "No User except root with UID 0"
- rm -rf /tmp/Group_${hostname}
+ rm -rf /tmp/QAT/Group_${hostname}
 fi
 sleep 3
 echo -e "-------------------------------------------"
@@ -128,15 +132,15 @@ fi
 sleep 3
 echo -e "-------------------------------------------"
 echo -e "Verify SUDO users configured as necessary per External customer specific servers"
-cat /etc/sudoers | grep -v "#" | sed  '/^#/ d' | sed '/^Defaults/ d'|sed '/^$/d' > /tmp/Sudo_${hostname}
-cat /tmp/Sudo_${hostname}
+cat /etc/sudoers | grep -v "#" | sed  '/^#/ d' | sed '/^Defaults/ d'|sed '/^$/d' > /tmp/QAT/Sudo_${hostname}
+cat /tmp/QAT/Sudo_${hostname}
 echo -e "-------------------------------------------"
 echo -e "Verify Linux firewall is "off" and in "accept" mod"
 iptables -nL > tables 2> /dev/null
 status=$( cat tables | awk '{print $5}' | sed '/^$/d' | uniq -d)
 if [[ $(wc -l < tables) -eq 8 && $status -eq "destination" ]]
 then
- echo "No extra Firewall rules are configured(It had default configuration)"
+ echo "No extra Firewall rules are configured(It has default configuration)"
 else
  echo -e "ERROR:- Some extra firewall rules are configured on the host(please have a look)"
 fi
@@ -206,7 +210,7 @@ else
 fi
 sleep 3
 echo -e "-------------------------------------------"
-yum check-update > /tmp/Yum_${hostname}
+yum check-update > /tmp/QAT/Yum_${hostname}
 sleep 3
 if [[ $? -eq 100 ]]
 then
