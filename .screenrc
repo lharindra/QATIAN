@@ -1,0 +1,39 @@
+shell bash                      # Tell screen your default shell
+startup_message off             # Turn off start message
+defscrollback = 5000
+shelltitle '$ |bash'    # Dynamic window titled for running program
+msgwait 1                 # Set messages timeout to one second
+nethack on                               # Turn on nethack error messages
+backtick 101 30 15 whoami                           # Set "%0`" to equal the output of "whoami"
+escape ^Gg
+termcapinfo xterm 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+termcapinfo xterm|xterms|xs|rxvt ti@:te@
+defbce "on"
+term xterm-256color
+defscrollback 300000
+hardstatus alwayslastline 
+hardstatus string '%{= Kd} %{= Kd}%-w%{= Kr}[%{= KW}%n %t%{= Kr}]%{= Kd}%+w %-= %{KG} %H%{KW}|%{KY}%101`%{KW}|%D %M %d %Y%{= Kc} %C%A%{-}'
+
+bind f eval "hardstatus ignore"
+
+bind F eval "hardstatus alwayslastline"
+
+bindkey -k k1 select 0
+
+bindkey -k k2 select 1
+
+bindkey -k k3 select 2
+
+bindkey -k k4 select 3
+
+bindkey -k k5 prev
+
+bindkey -k k6 next
+
+bindkey -k k7 title
+
+bindkey -k k8 screen
+
+bindkey -k k9 kill
+
+attrcolor b ".I"
