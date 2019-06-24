@@ -32,6 +32,14 @@ echo -e "the logical storage configured on The host"
 lvs
 sleep 3
 echo -e "-------------------------------------------"
+state=$( ps -C salt-minion >/dev/null && echo "Running" || echo "Not running")
+if [[ $? -eq 0 ]]
+then
+ echo -e "Salt-minion is ${status} on the host"
+else
+ echo -e "ERROR:- Salt-minion is ${status} on the host"
+fi
+echo -e "-------------------------------------------"
 if rpm -q BESAgent.x86_64
 then
  Ver=$( rpm -q BESAgent.x86_64 | cut -d"-" -f2)
