@@ -1,5 +1,5 @@
 #!/bin/bash
-awk -v d1="$(date --date="-1440 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i error > /tmp/QAT/error.log
+awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i error > /tmp/QAT/error.log
 if [[ $(wc -l < /tmp/QAT/error.log) -eq 0 ]]
 then
  echo -e "No ERORS found under /var/log/messages" #please don't edit the typo ERORS(to exclude from the fileter we made a typo)
@@ -7,7 +7,7 @@ then
 else
  echo -e "ERROR:- Still there are some ERROR logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
 fi
-awk -v d1="$(date --date="-1440 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i warning > /tmp/QAT/warning.log
+awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i warning > /tmp/QAT/warning.log
 if [[ $(wc -l < /tmp/QAT/warning.log) -eq 0 ]]
 then
  echo -e "No WARNINGS found under /var/log/messages"
@@ -15,7 +15,7 @@ then
 else
  echo -e "ERROR:- Still there are some WARNINGS logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
 fi
-awk -v d1="$(date --date="-1440 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i failed > /tmp/QAT/failed.log
+awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i failed > /tmp/QAT/failed.log
 if [[ $(wc -l < /tmp/QAT/failed.log) -eq 0 ]]
 then
  echo -e "No FAILED found under /var/log/messages"
@@ -23,7 +23,7 @@ then
 else
  echo -e "ERROR:- Still there are some FAIL logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
 fi
-awk -v d1="$(date --date="-1440 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i critical > /tmp/QAT/critical.log
+awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i critical > /tmp/QAT/critical.log
 if [[ $(wc -l < /tmp/QAT/critical.log) -eq 0 ]]
 then
  echo -e "No ERRORS found under /var/log/messages"
