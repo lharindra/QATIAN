@@ -394,8 +394,8 @@ then
    echo -e "Error:- Something is bad with yum please check manually"
  fi
  sleep 3
-fi
 yum_after
+fi
 echo -e "***************************************"
 echo -e "** Intrusive Automation confirmation **"
 echo -e "***************************************"
