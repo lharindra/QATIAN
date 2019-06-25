@@ -32,12 +32,12 @@ echo -e "the logical storage configured on The host"
 lvs
 sleep 3
 echo -e "-------------------------------------------"
-state=$( ps -C salt-minion >/dev/null && echo "Running" || echo "Not running")
-if [[ $? -eq 0 ]]
+salt_st=$( ps -C salt-minion >/dev/null && echo "Running" || echo "Not running")
+if [[ $salt_st == "Running" ]]
 then
- echo -e "Salt-minion is ${status} on the host"
+ echo -e "Salt-minion is ${salt_st} on the host"
 else
- echo -e "ERROR:- Salt-minion is ${status} on the host"
+ echo -e "ERROR:- Salt-minion is ${salt_st} on the host"
 fi
 echo -e "-------------------------------------------"
 if rpm -q BESAgent.x86_64
@@ -47,12 +47,12 @@ then
 else
  echo -e "ERROR:- BigFix is not installed on the host"
 fi
-state=$( ps -C BESClient >/dev/null && echo "Running" || echo "Not running")
-if [[ $? -eq 0 ]]
+bigfix_st=$( ps -C BESClient >/dev/null && echo "Running" || echo "Not running")
+if [[ $bigfix_st == "Running" ]]
 then
- echo -e "BigFix is ${state} on the host"
+ echo -e "BigFix is ${bigfix_st} on the host"
 else
- echo -e "ERROR:- BigFix is ${state} on the host"
+ echo -e "ERROR:- BigFix is ${bigfix_st} on the host"
 fi
 C_code=$( cat /var/opt/BESClient/besclient.config | egrep -C 2 'C_Code|__RelayServer1|__RelayServer2' | sed -n 4p | awk '{print $3}')
 echo -e "The value of the C_code is:- ${C_code}"
@@ -191,12 +191,12 @@ fi
 sleep 3
 echo -e "-------------------------------------------"
 echo -e "Verify whether ncpa is running"
-state=$( ps -C ncpa_passive >/dev/null && echo "Running" || echo "Not running")
-if [[ $? -eq 0 ]]
+nagio_st=$( ps -C ncpa_passive >/dev/null && echo "Running" || echo "Not running")
+if [[ nagio_st == "Running" ]]
 then
- echo -e "Nagios is ${status} on the host"
+ echo -e "Nagios is ${nagio_st} on the host"
 else
- echo -e "ERROR:- Nagios is ${status} on the host"
+ echo -e "ERROR:- Nagios is ${nagio_st} on the host"
 fi
 parent=$( /usr/local/ncpa/etc/ncpa.cfg | grep -i parent | grep -v "#")
 echo -e "The URL congifured for is(/usr/local/ncpa/etc/ncpa.cfg) :- ${parent}"
@@ -253,12 +253,12 @@ fi
 sleep 3
 echo -e "-------------------------------------------"
 echo -e "Assure that Anti-virus is setup correctly and functioning"
-state=$( ps -C isectpd >/dev/null && echo "Running" || echo "Not running")
-if [[ $? -eq 0 ]]
+isec_st=$( ps -C isectpd >/dev/null && echo "Running" || echo "Not running")
+if [[ isec_st == "Running" ]]
 then
- echo -e "Anti-virus is ${status} on the host"
+ echo -e "Anti-virus is ${isec_st} on the host"
 else
- echo -e "ERROR:- Anti-virus is ${status} on the host"
+ echo -e "ERROR:- Anti-virus is ${isec_st} on the host"
 fi
 /opt/isec/ens/threatprevention/bin/isecav --version
 sleep 3
