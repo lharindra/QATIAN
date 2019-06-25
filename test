@@ -354,22 +354,6 @@ echo -e "**************************************"
 echo -e "** Patching Automation confirmation **"
 echo -e "**************************************"
 echo -e ""
-ssh $user@$host <<'yum_before' 2> /dev/null
-sudo su -
-host=$( hostname)
-yum check-update > /tmp/QAT/Yum_$host
-if [[ $? -eq 100 ]]
-then
- yum=1
- export yum
- sleep 2
-elif [[ $? -eq 0 ]]
-then
- yum=0
- export yum
- sleep 2
-fi
-yum_before
 read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
 if [[ "$ny" == "n" || "$ny" == "N" ]]
 then
@@ -381,9 +365,11 @@ then
 fi
 if [[ "$ny" == "y" || "$ny" == "Y" ]]
 then
-  ssh $user@$host <<'yum_after' 2> /dev/null
+  ssh hari@172.31.33.6 <<'yum_after' 2> /dev/null
   sudo su -
-  if [[ $yum -eq 1 ]]
+  host=$( hostname)
+  yum check-update > /tmp/QAT/Yum_$host
+  if [[ $? -eq 100 ]]
   then
    yum update -y 2> /dev/null
    if [[ $? -eq 0 ]]
@@ -392,9 +378,10 @@ then
    else
     echo -e "ERROR:- YUM has some issues while patching"
    fi
-  elif [[ $yum -eq 0 ]]
+  elif [[ $? -eq 0 ]]
   then
    echo -e "Great stuff!! No patches to install"
+   sleep 2
   else
    echo -e "Error:- Something is bad with yum please check manually"
   fi
