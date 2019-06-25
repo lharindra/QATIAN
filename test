@@ -13,6 +13,8 @@ then
  user=iuxu
 fi
 export host=$host
+export user=$user
+export task=$user
 ssh $user@$host <<'qatesting' | tee /tmp/QAT/$host.log
 sudo su -
 mkdir -p /tmp/QAT
@@ -344,13 +346,13 @@ fi
 echo -e "----------------------The End---------------------"
 echo -e ""
 qatesting
-echo -e "++++++++++++++++++++++++++++++++++++++++++++++"
-echo -e "X Here are the defect after testing the host X"
-echo -e "++++++++++++++++++++++++++++++++++++++++++++++"
+echo -e "************************************************"
+echo -e "** Here are the defect after testing the host **"
+echo -e "************************************************"
 ./result.sh
-echo -e "++++++++++++++++++++++++++++++++++"
-echo -e X Patching Automation confirmation X
-echo -e "++++++++++++++++++++++++++++++++++"
+echo -e "**************************************"
+echo -e "** Patching Automation confirmation **"
+echo -e "**************************************"
 echo -e ""
 ssh $user@$host <<'yum_before'
 sudo su -
@@ -369,7 +371,7 @@ then
 fi
 if [[ "$ny" == "y" || "$ny" == "Y" ]]
 then
-     read -p "Re-Confirm please type(y/n):-" yn
+     read -p "Re-Confirm please type(y/n):-" ny
 fi
 if [[ "$ny" == "y" || "$ny" == "Y" ]]
 then
@@ -394,6 +396,10 @@ then
  sleep 3
 fi
 yum_after
+echo -e "***************************************"
+echo -e "** Intrusive Automation confirmation **"
+echo -e "***************************************"
+echo -e ""
 read -p "Do you want do intrusive(reboot), Please confirm[y/n]:- " yn
 if [[ "$yn" == "n" || "$yn" == "N" ]]
 then
@@ -425,14 +431,18 @@ reboot_before
      df -h >> /tmp/mounts_1
      uptime=$( uptime)
      echo -e ""
-     echo -e "+++++++++"
+     echo -e "++++++++++"
      echo -e "X UPTIME X :------- ${uptime}"
-     echo -e "+++++++++"
+     echo -e "++++++++++"
      echo -e ""
 reboot_after
- echo -e "Successfully rebooted the host"
- echo -e ""
- echo -e "last 48 hours event log errors of the are ..."
+ echo -e "************************************"
+ echo -e "** Successfully rebooted the host **"
+ echo -e "************************************"
+ echo -e "XXXXXXXXXXXXX---O---XXXXXXXXXXXXXXXX"
+ echo -e "************************************"
+ echo -e "** LAST 48 HOURS EVENT LOG ERRORS **"
+ echo -e "************************************"
  ssh $user@$host <<'varlog'
  sudo su -
  awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i error > /tmp/QAT/error.log
@@ -513,3 +523,6 @@ reboot_after
  fi
 varlog
 fi
+echo -e "*********************************************************************"
+echo -e "** Done With Automation Testing For QAT Process!! Thanks For Using **"
+echo -e "*********************************************************************"
