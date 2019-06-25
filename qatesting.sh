@@ -98,7 +98,7 @@ echo -e "Network configurations"
 ipv4=$( hostname -I | awk '{print $1}')
 echo -e "The IPv4 address configured on the host is:- ${ipv4}"
 ip -6 addr | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v ^::1 | grep -v ^fe80 > /tmp/QAT/ipv6_${hostname}
-if [[ -s /tmp/QAT/ipv6_${hostname} ]]
+if [[ -s /tmp/QAT/ipv6_$hostname ]]
 then
  echo -e "IPv6 is not configured on the host"
 else
@@ -175,7 +175,7 @@ echo -e "-------------------------------------------"
 cp /etc/rsyslog.conf /etc/rsyslog.conf_"$(date +'%Y%m%d')" 2> /dev/null
 if [[  $? -eq 0  ]]
 then
- echo -e "Copied the rsyslog.conf file with latest date under /etc/"
+ echo -e "Copied the rsyslog.conf file with latest date under /etc/rsyslog.conf_(yymmdd)"
 else
  echo -e "ERROR:- Unable to copy the rsyslog.conf file(May be file does not exists)"
 fi
@@ -213,7 +213,7 @@ then
   echo -e "FIM is configured and it is in:- ${state} state"
  fi
 else
- echo -e "FIM is not installed or configured(check with McAfee team(If required))"
+ echo -e "ERROR:- FIM is not installed or configured(check with McAfee team(If required))"
 fi
 OS_ver=$( cat /etc/os-release | sed -n '2p'|cut -d"=" -f2 | sed 's/^"//; s/"$//'| awk '{print $1}'|cut -d"." -f1)
 if [[ "$OS_ver" -eq "6" ]]
@@ -224,14 +224,15 @@ then
  echo -e "To check the version(optional)"
  /opt/McAfee/agent/bin/./cmdagent -i
 else
- echo -e "As the OS version on the host is ${OS_ver}. HIP's configuration is not required as per the QAT Requirements. For more details check with McAfee team(If required)"
+ echo -e "ERROR:- As the OS version on the host is ${OS_ver}. HIP's configuration is not required as per the QAT Requirements. For more details check with McAfee team(If required)"
 fi
 sleep 3
 echo -e "-------------------------------------------"
 yum check-update > /tmp/QAT/Yum_${hostname}
 if [[ $? -eq 100 ]]
 then
- echo -e "System has Security system patches. Please go ahead and patch them(if required)"
+ echo "System has Security system patches. Please go ahead and patch them(if required)"
+ sleep 2
  while true; do
     read -p "Do you wish to install all the available patches? Please give the input(y/n):-" yn
     if [[ "$yn" == "y" || "$yn" == "Y" ]]
@@ -333,6 +334,6 @@ if [[ $? -eq 0 ]]
 then
  echo -e "Netbackup is installed with the version of ${Netback}"
 else
- echo -e "Netbackup software is not installed"
+ echo -e "ERROR:- Netbackup software is not installed"
 fi
 echo -e "----------------------The End---------------------"
