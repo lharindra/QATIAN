@@ -354,34 +354,36 @@ echo -e "**************************************"
 echo -e "** Patching Automation confirmation **"
 echo -e "**************************************"
 echo -e ""
-ssh $user@$host <<'yum_before'
+ssh $user@$host <<'yum_before' 2> /dev/null
 sudo su -
 host=$( hostname)
 yum check-update > /tmp/QAT/Yum_$host
-if [[ $? -eq 0 ]]
+if [[ $? -eq 100 ]]
 then
- echo -e "Great stuff!! No patches to install"
-elif [[ $? -eq 100 ]]
-then
- echo "System has Security system patches. Please go ahead and patch them(if required)"
- yum=there
+ yum=1
  export yum
  sleep 2
+elif [[ $? -eq 0 ]]
+then
+ yum=0
+ export yum
+ sleep 2
+fi
 yum_before
- read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
- if [[ "$ny" == "n" || "$ny" == "N" ]]
- then
-  echo -e "As you had selected (No) it's quiting!!! :( !!"
- fi
- if [[ "$ny" == "y" || "$ny" == "Y" ]]
- then
+read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
+if [[ "$ny" == "n" || "$ny" == "N" ]]
+then
+ echo -e "As you had selected (No) it's quiting!!! :( !!"
+fi
+if [[ "$ny" == "y" || "$ny" == "Y" ]]
+then
      read -p "Re-Confirm please type(y/n):-" ny
- fi
- if [[ "$ny" == "y" || "$ny" == "Y" ]]
- then
-  ssh $user@$host <<'yum_after'
+fi
+if [[ "$ny" == "y" || "$ny" == "Y" ]]
+then
+  ssh $user@$host <<'yum_after' 2> /dev/null
   sudo su -
-  if [[ $yum == "there" ]]
+  if [[ $yum -eq 1 ]]
   then
    yum update -y 2> /dev/null
    if [[ $? -eq 0 ]]
@@ -390,14 +392,17 @@ yum_before
    else
     echo -e "ERROR:- YUM has some issues while patching"
    fi
+  elif [[ $yum -eq 0 ]]
+  then
+   echo -e "Great stuff!! No patches to install"
+  else
+   echo -e "Error:- Something is bad with yum please check manually"
   fi
 yum_after
- fi
-else
-   echo -e "Error:- Something is bad with yum please check manually"
    sleep 3
 fi
 sleep 3
+echo -e ""
 echo -e "***************************************"
 echo -e "** Intrusive Automation confirmation **"
 echo -e "***************************************"
