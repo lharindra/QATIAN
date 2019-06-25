@@ -98,7 +98,7 @@ echo -e "Network configurations"
 ipv4=$( hostname -I | awk '{print $1}')
 echo -e "The IPv4 address configured on the host is:- ${ipv4}"
 ip -6 addr | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v ^::1 | grep -v ^fe80 > /tmp/QAT/ipv6_${hostname}
-if [[ -s /tmp/QAT/ipv6_$hostname ]]
+if [[ ! -s /tmp/QAT/ipv6_$hostname ]]
 then
  echo -e "IPv6 is not configured on the host"
 else
