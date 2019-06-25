@@ -358,44 +358,46 @@ ssh $user@$host <<'yum_before'
 sudo su -
 host=$( hostname)
 yum check-update > /tmp/QAT/Yum_$host
-if [[ $? -eq 100 ]]
+if [[ $? -eq 0 ]]
+then
+ echo -e "Great stuff!! No patches to install"
+elif [[ $? -eq 100 ]]
 then
  echo "System has Security system patches. Please go ahead and patch them(if required)"
+ yum=there
+ export yum
  sleep 2
-fi
 yum_before
-read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
-if [[ "$ny" == "n" || "$ny" == "N" ]]
-then
- echo -e "As you had selected (No) it's quiting!!! :( !!"
-fi
-if [[ "$ny" == "y" || "$ny" == "Y" ]]
-then
-     read -p "Re-Confirm please type(y/n):-" ny
-fi
-if [[ "$ny" == "y" || "$ny" == "Y" ]]
-then
- ssh $user@$host <<'yum_after'
- sudo su -
- yum check-update > /dev/null 2> /dev/null
- if [[ $? -eq 100 ]]
+ read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
+ if [[ "$ny" == "n" || "$ny" == "N" ]]
  then
-  yum update -y 2> /dev/null
-  if [[ $? -eq 0 ]]
-  then
-   echo -e "Patching is completed successfully"
-  else
-   echo -e "ERROR:- YUM has some issues while patching"
-  fi
- elif[[ $? -eq 0 ]]
- then
-   echo -e "Great stuff!! No patches to install"
- else
-   echo -e "Error:- Something is bad with yum please check manually"
+  echo -e "As you had selected (No) it's quiting!!! :( !!"
  fi
- sleep 3
+ if [[ "$ny" == "y" || "$ny" == "Y" ]]
+ then
+     read -p "Re-Confirm please type(y/n):-" ny
+ fi
+ if [[ "$ny" == "y" || "$ny" == "Y" ]]
+ then
+  ssh $user@$host <<'yum_after'
+  sudo su -
+  if [[ $yum == "there" ]]
+  then
+   yum update -y 2> /dev/null
+   if [[ $? -eq 0 ]]
+   then
+    echo -e "Patching is completed successfully"
+   else
+    echo -e "ERROR:- YUM has some issues while patching"
+   fi
+  fi
 yum_after
+ fi
+else
+   echo -e "Error:- Something is bad with yum please check manually"
+   sleep 3
 fi
+sleep 3
 echo -e "***************************************"
 echo -e "** Intrusive Automation confirmation **"
 echo -e "***************************************"
