@@ -246,20 +246,18 @@ else
 fi
 sleep 3
 echo -e "-------------------------------------------"
-: ' //commenting these lines as they are covered below
 yum check-update > /tmp/QAT/Yum_${hostname}
 if [[ $? -eq 100 ]]
 then
  echo "ERROR:- System has Security system patches. Please go ahead and patch them(if required)"
-elif [[ $? -eq 0 ]]
+fi
+yum check-update > /tmp/QAT/Yum_${hostname}
+if [[ $? -eq 0 ]]
 then
  echo -e "Great stuff!! No patches to install"
-else
- echo -e "Error:- Something is bad with yum please check manually"
 fi
 sleep 3
 echo -e "-------------------------------------------"
-' // till here commented
 echo -e "Assure that Anti-virus is setup correctly and functioning"
 isec_st=$( ps -C isectpd >/dev/null && echo "Running" || echo "Not running")
 if [[ isec_st == "Running" ]]
@@ -356,12 +354,16 @@ then
 else
  echo -e "$(wc -l < /tmp/QAT/${host}_defects) defects are found while testing the host ${host} and they are......"
  cat -n /tmp/QAT/${host}_defects
-fi
+fi 
 echo -e "**************************************"
 echo -e "** Patching Automation confirmation **"
 echo -e "**************************************"
 echo -e ""
-read -p "Please confirm to goahead and patch to the latest updates[y/n]:- " ny
+echo -e "************"
+echo -e "** NOTE:- ** Please check the defects list mentioned above to confirm whether to procced or not. IF no defects found"
+echo -e "************ related to patching then you skip to the next section by giving(n). If you see there are patchs on host in defect enter(y) to proceed."
+echo -e ""
+read -p "Please check the defects list mentioned above to confirm whether to procced or not [y/n]:- " ny
 if [[ "$ny" == "n" || "$ny" == "N" ]]
 then
  echo -e "As you had selected (No) it's quiting!!! :( !!"
@@ -379,9 +381,6 @@ then
   if [[ $? -eq 0 ]]
   then
    echo -e "Great stuff!! No patches to install"
-   sleep 2
-  else
-   echo -e "Error:- Something is bad with yum please check manually"
   fi
   yum check-update > /tmp/QAT/Yum_$host
   if [[ $? -eq 100 ]]
