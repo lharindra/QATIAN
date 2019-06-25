@@ -97,7 +97,14 @@ echo -e "-------------------------------------------"
 echo -e "Network configurations"
 ipv4=$( hostname -I | awk '{print $1}')
 echo -e "The IPv4 address configured on the host is:- ${ipv4}"
-echo -e "Verify the ipv6 on the host"
+ip -6 addr | grep inet6 | awk -F '[ \t]+|/' '{print $3}' | grep -v ^::1 | grep -v ^fe80 > /tmp/QAT/ipv6_${hostname}
+if [[ -s /tmp/QAT/ipv6_${hostname} ]]
+then
+ echo -e "IPv6 is not configured on the host"
+else
+ echo -e "ERROR:- IPv6 is configured on the host and here they are ..."
+ cat /tmp/QAT/ipv6_{hostname}
+fi
 echo -e "the default gateway configured on the host"
 netstat -rn
 sleep 3
@@ -233,7 +240,7 @@ then
     fi
     case $yn in
         [Yy]* ) yum update -y 2> /dev/null ; if [[ $? -eq 0 ]]; then echo -e "Patching is completed successfully"; else echo -e "ERROR:- YUM has some issues while patching"; fi; break;;
-        [Nn]* ) echo -e "As you had selected (No) it's quiting!!!";break;;
+        [Nn]* ) echo -e "As you had selected (No) it's quiting!!!"; echo -e "ERROR:- Updates are available on the host"; break;;
         * ) echo "Please answer yes or no.";;
     esac
  done
