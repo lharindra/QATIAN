@@ -376,6 +376,14 @@ then
   sudo su -
   host=$( hostname)
   yum check-update > /tmp/QAT/Yum_$host
+  if [[ $? -eq 0 ]]
+  then
+   echo -e "Great stuff!! No patches to install"
+   sleep 2
+  else
+   echo -e "Error:- Something is bad with yum please check manually"
+  fi
+  yum check-update > /tmp/QAT/Yum_$host
   if [[ $? -eq 100 ]]
   then
    yum update -y 2> /dev/null
@@ -385,15 +393,9 @@ then
    else
     echo -e "ERROR:- YUM has some issues while patching"
    fi
-  elif [[ $? -eq 0 ]]
-  then
-   echo -e "Great stuff!! No patches to install"
-   sleep 2
-  else
-   echo -e "Error:- Something is bad with yum please check manually"
   fi
 yum_after
-   sleep 3
+  sleep 3
 fi
 sleep 3
 echo -e ""
