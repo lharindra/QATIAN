@@ -372,7 +372,7 @@ then
 fi
 if [[ "$ny" == "y" || "$ny" == "Y" ]]
 then
-  ssh hari@172.31.33.6 <<'yum_after' 2> /dev/null
+  ssh $user@$host <<'yum_after' 2> /dev/null
   sudo su -
   host=$( hostname)
   yum check-update > /tmp/QAT/Yum_$host
