@@ -109,7 +109,7 @@ else
 fi
 sleep 3
 echo -e "-------------------------------------------"
-echo -e "Display all the users configured on the host"
+echo -e "Display all the users configured on the host"ec2-52-15-204-90.us-east-2.compute.amazonaws.com
 cat /etc/passwd
 echo -e "-------------------------------------------"
 echo -e "Network configurations"
@@ -251,10 +251,15 @@ if [[ $? -eq 100 ]]
 then
  echo "ERROR:- System has Security system patches. Please go ahead and patch them(if required)"
 fi
-yum check-update > /tmp/QAT/Yum_${hostname}
+yum check-update > /dev/null
 if [[ $? -eq 0 ]]
 then
  echo -e "Great stuff!! No patches to install"
+fi
+yum check-update > /dev/null
+if [[ $? -ne 0 && $? -ne 100 ]]
+then
+ echo -e "ERROR:- Yum has some issue while checking the patches, Please check manually"
 fi
 sleep 3
 echo -e "-------------------------------------------"
