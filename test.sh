@@ -15,7 +15,7 @@ fi
 export host=$host
 export user=$user
 export task=$user
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'qatesting' | tee /tmp/QAT/$host.log
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'qatesting' | tee /tmp/QAT/log_$host.log
 sudo su -
 mkdir -p /tmp/QAT
 echo -e "+++++++++++++++++++++++++++++++++++++++"
@@ -34,7 +34,7 @@ echo -e "-------------------------------------------"
 Mem=$( free -tm| awk '{print  $1, $2}'| sed -n '2,4p' | tr "\n" " ") 2> /dev/null
 echo -e "Available memory on the host is(MB's):- ${Mem}"
 echo -e "-------------------------------------------"
-cpu=$( cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l) 2> /dev/null
+cpu=$( cat /proc/cpuinfo |grep "processor" |sort | uniq | wc -l) 2> /dev/null
 core=$( cat /proc/cpuinfo | grep "cpu cores" | uniq |awk '{print $4}') 2> /dev/null
 echo -e "No of CORE ${core} per No Of CPU ${cpu} on the Host -- In numerical format(core*cpu):- ${core}*${cpu}"
 lscpu | sed -n '1,2p'
@@ -352,13 +352,13 @@ qatesting
 echo -e "************************************************"
 echo -e "** Here are the defect after testing the host **"
 echo -e "************************************************"
-cat /tmp/QAT/${host}.log | grep -i error | awk '{$1=""; print}' > /tmp/QAT/${host}_defects
-if [[ $(wc -l < /tmp/QAT/${host}_defects) -eq 0 ]]
+cat /tmp/QAT/log_${host}.log | grep -i error | awk '{$1=""; print}' > /tmp/QAT/defects_${host}
+if [[ $(wc -l < /tmp/QAT/defects_${host}) -eq 0 ]]
 then
  echo -e "Great Stuff :) !!! not defects found on the host ${host}"
 else
  echo -e "$(wc -l < /tmp/QAT/${host}_defects) defects are found while testing the host ${host} and they are......"
- cat -n /tmp/QAT/${host}_defects
+ cat -n /tmp/QAT/defects_${host}
 fi 
 echo -e "**************************************"
 echo -e "** Patching Automation confirmation **"
@@ -381,13 +381,14 @@ if [[ "$ny" == "y" || "$ny" == "Y" ]]
 then
   ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'yum_after' 2> /dev/null
   sudo su -
+  hostname=$( hostname)
   host=$( hostname)
-  yum check-update > /tmp/QAT/Yum_$host
+  yum check-update > /dev/null
   if [[ $? -eq 0 ]]
   then
    echo -e "Great stuff!! No patches to install"
   fi
-  yum check-update > /tmp/QAT/Yum_$host
+  yum check-update > /tmp/QAT/Yum_${hostname}
   if [[ $? -eq 100 ]]
   then
    yum update -y 2> /dev/null
@@ -418,7 +419,7 @@ then
 fi
 if [[ "$yn" == "y" || "$yn" == "Y" ]]
 then
- ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'reboot_before'
+ ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'reboot_before' 2> /dev/null
  ps -ef >> /tmp/startups
  df -h >> /tmp/mounts
  sudo -k reboot
@@ -431,11 +432,18 @@ reboot_before
  done
  printf "\n%s\n"  "Server is back online"
  sleep 10
- ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'reboot_after'
+ ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'reboot_after' 2> /dev/null
 #ssh -t hari@ec2-18-216-189-30.us-east-2.compute.amazonaws.com <<'reboot_after'
      sleep 10
      ps -ef >> /tmp/startups_1
      df -h >> /tmp/mounts_1
+     cmp /tmp/mounts /tmp/mounts_1
+     if [[ $? -ne 0 ]]
+     then
+      echo -e "***********"
+      echo -e "** ERROR **" :- some file system had not mountes after rebooting the host. Please go and check them manually
+      echo -e "***********"
+     fi
      uptime=$( uptime)
      echo -e ""
      echo -e "++++++++++"
@@ -446,90 +454,96 @@ reboot_after
  echo -e "************************************"
  echo -e "** Successfully rebooted the host **"
  echo -e "************************************"
- echo -e "XXXXXXXXXXXXX---O---XXXXXXXXXXXXXXXX"
+ echo -e ""
+ echo -e ""
+ echo -e "++++++++++++++++++++++++++++++++++++++++++++++++++++++- XOX -+++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+ echo -e ""
+ echo -e ""
  echo -e "************************************"
  echo -e "** LAST 48 HOURS EVENT LOG ERRORS **"
  echo -e "************************************"
  ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $user@$host <<'varlog'
  sudo su -
- awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i error > /tmp/QAT/error.log
- if [[ $(wc -l < /tmp/QAT/error.log) -eq 0 ]]
+ hostname=$( hostname)
+ awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i error > /tmp/QAT/error_{hostname}.log
+ if [[ $(wc -l < /tmp/QAT/error_${hostname}.log) -eq 0 ]]
  then
   echo -e "No ERORS found under /var/log/messages" #please don't edit the typo ERORS(to exclude from the fileter we made a typo)
-  rm -rf /tmp/QAT/error.log
+  rm -rf /tmp/QAT/error_${hostname}.log
  else
-  echo -e "ERROR:- Still there are some ERROR logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
+  echo -e "ERROR:- Still there are some ERROR logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog_${hostname}.log"
  fi
- awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i warning > /tmp/QAT/warning.log
- if [[ $(wc -l < /tmp/QAT/warning.log) -eq 0 ]]
+ awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i warning > /tmp/QAT/warning_${hostname}.log
+ if [[ $(wc -l < /tmp/QAT/warning_${hostname}.log) -eq 0 ]]
  then
   echo -e "No WARNINGS found under /var/log/messages"
-  rm -rf /tmp/QAT/warning.log
+  rm -rf /tmp/QAT/warning_${hostname}.log
  else
-  echo -e "ERROR:- Still there are some WARNINGS logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
+  echo -e "ERROR:- Still there are some WARNINGS logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog_${hostname}.log"
  fi
- awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i failed > /tmp/QAT/failed.log
- if [[ $(wc -l < /tmp/QAT/failed.log) -eq 0 ]]
+ awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i failed > /tmp/QAT/failed_${hostname}.log
+ if [[ $(wc -l < /tmp/QAT/failed_${hostname}.log) -eq 0 ]]
  then
   echo -e "No FAILED found under /var/log/messages"
-  rm -rf /tmp/QAT/failed.log
+  rm -rf /tmp/QAT/failed_${hostname}.log
  else
-  echo -e "ERROR:- Still there are some FAIL logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
+  echo -e "ERROR:- Still there are some FAIL logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog_${hostname}.log"
  fi
- awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i critical > /tmp/QAT/critical.log
- if [[ $(wc -l < /tmp/QAT/critical.log) -eq 0 ]]
+ awk -v d1="$(date --date="-2880 min" "+%b %_d %H:%M")" -v d2="$(date "+%b %_d %H:%M")" '$0 > d1 && $0 < d2 || $0 ~ d2' /var/log/messages | grep -i critical > /tmp/QAT/critical_${hostname}.log
+ if [[ $(wc -l < /tmp/QAT/critical_${hostname}.log) -eq 0 ]]
  then
   echo -e "No ERRORS found under /var/log/messages"
-  rm -rf /tmp/QAT/critical.log
+  rm -rf /tmp/QAT/critical_${hostname}.log
  else
-  echo -e "ERROR:- Still there are some CRITICAL logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog.log"
+  echo -e "ERROR:- Still there are some CRITICAL logs under /var/log/messages!!!! Please go and fix them ---- find the in file /tmp/QAT/varlog_${hostname}.log"
  fi
- if [[ -f /tmp/QAT/varlog.log ]]
+ if [[ -f /tmp/QAT/varlog_${hostname}.log ]]
  then
-  cp /dev/null /tmp/QAT/varlog.log
-  echo -e "This was created on [$(date)]" > /tmp/QAT/varlog.log
+  cp /dev/null /tmp/QAT/varlog_${hostname}.log
+  echo -e "This was created on [$(date)]" > /tmp/QAT/varlog_${hostname}.log
  fi
- if [[ -f /tmp/QAT/error.log ]]
+ if [[ -f /tmp/QAT/error_${hostname}.log ]]
  then
-  echo -e "++++++++++++++" >> /tmp/QAT/varlog.log
-  echo -e "X ERROR LOGS X" >> /tmp/QAT/varlog.log
-  echo -e "++++++++++++++" >> /tmp/QAT/varlog.log
-  cat /tmp/QAT/error.log >> /tmp/QAT/varlog.log
+  echo -e "++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "X ERROR LOGS X" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/error.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/error.log
  fi
- if [[ -f /tmp/QAT/warning.log ]]
+ if [[ -f /tmp/QAT/warning_${hostname}.log ]]
  then 
-  echo -e "++++++++++++++++" >> /tmp/QAT/varlog.log
-  echo -e "X WARNING LOGS X" >> /tmp/QAT/varlog.log
-  echo -e "++++++++++++++++" >> /tmp/QAT/varlog.log
-  cat /tmp/QAT/warning.log >> /tmp/QAT/varlog.log
+  echo -e "++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "X WARNING LOGS X" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/warning.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/warning.log
  fi
  if [[ -f /tmp/QAT/failed.log ]]
  then 
-  echo -e "+++++++++++++" >> /tmp/QAT/varlog.log
-  echo -e "X FAIL LOGS X" >> /tmp/QAT/varlog.log
-  echo -e "+++++++++++++" >> /tmp/QAT/varlog.log
-  cat /tmp/QAT/failed.log >> /tmp/QAT/varlog.log
+  echo -e "+++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "X FAIL LOGS X" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "+++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/failed.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/failed.log
  fi
- if [[ -f /tmp/QAT/critical.log ]]
+ if [[ -f /tmp/QAT/critical_${hostname}.log ]]
  then
-  echo -e "+++++++++++++++++" >> /tmp/QAT/varlog.log
-  echo -e "X CRITICAL LOGS X" >> /tmp/QAT/varlog.log
-  echo -e "+++++++++++++++++" >> /tmp/QAT/varlog.log
-  cat /tmp/QAT/critical.log >> /tmp/QAT/varlog.log
+  echo -e "+++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "X CRITICAL LOGS X" >> /tmp/QAT/varlog_${hostname}.log
+  echo -e "+++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/critical.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/critical.log
  fi
- if [[ ! -s /tmp/QAT/varlog.log ]]
+ if [[ ! -s /tmp/QAT/varlog_${hostname}.log ]]
  then
   echo -e "Great stuff :) !!! No event log errors on the host"
  else
   echo -e "These are the event log errors found on the host"
-  cat /tmp/QAT/varlog.log
+  cat /tmp/QAT/varlog_${hostname}.log
  fi
 varlog
 fi
 echo -e "*********************************************************************"
 echo -e "** Done With Automation Testing For QAT Process!! Thanks For Using **"
 echo -e "*********************************************************************"
+
