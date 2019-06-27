@@ -399,6 +399,12 @@ then
     echo -e "ERROR:- YUM has some issues while patching"
    fi
   fi
+  yum check-update > /dev/null
+  if [[ $? -ne 0 && $? -ne 100 ]]
+  then
+     echo -e "ERROR:- Yum has some issue while checking the patches, Please check manually"
+  fi
+  sleep 3
 yum_after
   sleep 3
 fi
@@ -441,7 +447,7 @@ reboot_before
      if [[ $? -ne 0 ]]
      then
       echo -e "***********"
-      echo -e "** ERROR **" :- some file system had not mountes after rebooting the host. Please go and check them manually
+      echo -e "** ERROR ** :- some file system had not mountes after rebooting the host. Please go and check them manually"
       echo -e "***********"
      fi
      uptime=$( uptime)
@@ -507,7 +513,7 @@ reboot_after
   echo -e "++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "X ERROR LOGS X" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
-  cat /tmp/QAT/error.log >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/error_${hostname}.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/error.log
  fi
  if [[ -f /tmp/QAT/warning_${hostname}.log ]]
@@ -515,7 +521,7 @@ reboot_after
   echo -e "++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "X WARNING LOGS X" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
-  cat /tmp/QAT/warning.log >> /tmp/QAT/varlog_${hostname}.log
+  cat /tmp/QAT/warning_${hostname}.log >> /tmp/QAT/varlog_${hostname}.log
   rm -rf /tmp/QAT/warning.log
  fi
  if [[ -f /tmp/QAT/failed.log ]]
@@ -524,7 +530,7 @@ reboot_after
   echo -e "X FAIL LOGS X" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "+++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
   cat /tmp/QAT/failed.log >> /tmp/QAT/varlog_${hostname}.log
-  rm -rf /tmp/QAT/failed.log
+  rm -rf /tmp/QAT/failed_${hostname}.log
  fi
  if [[ -f /tmp/QAT/critical_${hostname}.log ]]
  then
@@ -532,7 +538,7 @@ reboot_after
   echo -e "X CRITICAL LOGS X" >> /tmp/QAT/varlog_${hostname}.log
   echo -e "+++++++++++++++++" >> /tmp/QAT/varlog_${hostname}.log
   cat /tmp/QAT/critical.log >> /tmp/QAT/varlog_${hostname}.log
-  rm -rf /tmp/QAT/critical.log
+  rm -rf /tmp/QAT/critical_${hostname}.log
  fi
  if [[ ! -s /tmp/QAT/varlog_${hostname}.log ]]
  then
